@@ -1,0 +1,37 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-11-30"
+---
+
+Few things to be noted
+
+1. SNAP2022Race, The race is based on the houshold so there are Mixed or "two or more races"\
+2. Healthcare coverage : This one has the total healthcare coverage so did not do private/public seperately, just healthcare coverage\
+Also did not have 2020 datasets, so its from 2017 to 2022(excluded 2020)\
+3. SNAP 5 years from 2019 to 2023\
+
+My concern is 1) if we marge based on the states, the year wont perfectly match since one of them are 2017-2022, the other is 2019-2023\
+2) Also SNAP2022Race data, I dont know how to merge with other two datasets since it only contains 2022 data\
+
+```{r}
+library(tidyverse)
+
+SNAP2022Race <- read_delim("../Datasets/SNAP_Race_2022.csv")
+SNAP2022Race
+
+Healthcare <- read_delim("../Datasets/Healthcare_Total.csv")
+Healthcare
+
+SNAP5Years <- read_delim("../Datasets/SNAP_5years.csv")
+SNAP5Years
+
+Healthcare <- rename(Healthcare, State = `Selected Geographies`)
+Healthcare
+
+merged_data <- inner_join(Healthcare, SNAP5Years, by = c("State", "Year"))
+head(merged_data,6)
+
+
+```
+
