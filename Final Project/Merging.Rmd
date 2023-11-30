@@ -4,34 +4,48 @@ output: html_document
 date: "2023-11-30"
 ---
 
-Few things to be noted
+**Explain of Variables**
 
-1. SNAP2022Race, The race is based on the houshold so there are Mixed or "two or more races"\
-2. Healthcare coverage : This one has the total healthcare coverage so did not do private/public seperately, just healthcare coverage\
-Also did not have 2020 datasets, so its from 2017 to 2022(excluded 2020)\
-3. SNAP 5 years from 2019 to 2023\
-
-My concern is 1) if we marge based on the states, the year wont perfectly match since one of them are 2017-2022, the other is 2019-2023\
-2) Also SNAP2022Race data, I dont know how to merge with other two datasets since it only contains 2022 data\
+1.  SNAP2022Race: The race is based on the household so there are Mixed or "two or more races"
+    1.  SNAP : Yes / No
+    2.  Total : Total population
+    3.  White alone
+    4.  Black or African American alone
+    5.  American Indian alone
+    6.  Alaska Native alone
+    7.  American Indian and Alaska Native tribes specified; or American Indian or Alaska Native, not specified and no other races
+    8.  Asian alone
+    9.  Native Hawaiian and Other Pacific Islander alone
+2.  Healthcare5Years : Total healthcare coverage in 2022 2021 2019 2018 2017
+    1.  Total(Healthcare): Total population
+    2.  With health insurance coverage: Population with insurance
+    3.  No health insurance coverage: Population without insuracne
+3.  SNAP5Years : SNAP participats in 2023 2022 2021 2020 2019 2018 2017
+    1.  SNAP Household Participation : Total household count participating SNAP
+    2.  SNAP Persons Participation : Total person count participating SNAP
+    3.  SNAP Total Cost : Total amount spend in SNAP
+    4.  SNAP Cost Per Household
+    5.  SNAP Cost Per Persons
 
 ```{r}
 library(tidyverse)
 
 SNAP2022Race <- read_delim("../Datasets/SNAP_Race_2022.csv")
+SNAP2022Race <- rename(SNAP2022Race, State = `Selected Geographies`)
 SNAP2022Race
 
-Healthcare <- read_delim("../Datasets/Healthcare_Total.csv")
-Healthcare
+Healthcare5Years <- read_delim("../Datasets/Healthcare_Total.csv")
+Healthcare5Years <- rename(Healthcare5Years, State = `Selected Geographies`)
+Healthcare5Years
 
 SNAP5Years <- read_delim("../Datasets/SNAP_5years.csv")
 SNAP5Years
 
-Healthcare <- rename(Healthcare, State = `Selected Geographies`)
-Healthcare
 
-merged_data <- inner_join(Healthcare, SNAP5Years, by = c("State", "Year"))
-head(merged_data,6)
+merged_data <- inner_join(Healthcare5Years, SNAP5Years, SNAP2022Race, by = c("State", "Year"))
+merged_data <- inner_join(merged_data, SNAP2022Race, by = c("State", "Year"))
 
 
+merged_data
+ 
 ```
-
