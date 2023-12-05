@@ -1,0 +1,295 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-11-30"
+---
+
+**Explanation of Variables**
+
+1.  SNAP2022Race: The race is based on the household so there are Mixed or "two or more races"
+    1.  SNAP : Yes ONLY \*There is No data too, if you need I will update
+    2.  Total : Total population
+    3.  White alone
+    4.  Black or African American alone
+    5.  American Indian alone
+    6.  Alaska Native alone
+    7.  American Indian and Alaska Native tribes specified; or American Indian or Alaska Native, not specified and no other races
+    8.  Asian alone
+    9.  Native Hawaiian and Other Pacific Islander alone
+2.  Healthcare5Years : Total healthcare coverage in 2022 2021 2019 2018 2017
+    1.  Total(Healthcare): Total population
+    2.  With health insurance coverage: Population with insurance
+    3.  No health insurance coverage: Population without insurance
+3.  SNAP5Years : SNAP participants in 2023 2022 2021 2020 2019 2018 2017
+    1.  SNAP Household Participation : Total household count participating SNAP
+    2.  SNAP Persons Participation : Total person count participating SNAP
+    3.  SNAP Total Cost : Total amount spend in SNAP
+    4.  SNAP Cost Per Household
+    5.  SNAP Cost Per Persons
+
+```{r}
+library(tidyverse)
+
+SNAP2022Race <- read_delim("../Datasets/SNAP_Race_2022.csv")
+SNAP2022Race <- rename(SNAP2022Race, State = `Selected Geographies`)
+SNAP2022Race
+
+Healthcare5Years <- read_delim("../Datasets/Healthcare_Total.csv")
+Healthcare5Years <- rename(Healthcare5Years, State = `Selected Geographies`)
+Healthcare5Years
+
+SNAP5Years <- read_delim("../Datasets/SNAP_5years.csv")
+SNAP5Years
+
+
+merged_data <- inner_join(Healthcare5Years, SNAP5Years, by = c("State", "Year"))
+merged_data <- inner_join(merged_data, SNAP2022Race, by = c("State", "Year"))
+
+
+merged_data
+ 
+```
+
+## Ella
+
+**Main Question**\
+Does being a primarily red or blue state affect SNAP participation and healthcare coverage?
+
+\
+In the context of the most recent presidential election in the United States, states are often classified as "Red" or "Blue" based on the predominant voting preference for the Republican or Democratic party, respectively.
+
+\<Red States (Republican - Donald Trump)\>
+
+Alabama,Alaska,Arkansas,Florida,Idaho,Indiana,Iowa,Kansas,Kentucky,Louisiana,Mississippi,Missouri,Montana,Nebraska,North Carolina,North Dakota,Ohio,Oklahoma,South Carolina,South Dakota,Tennessee,Texas,Utah,West Virginia,Wyoming
+
+\<Blue States (Democratic - Joe Biden)\>
+
+Arizona,California,Colorado,Connecticut,Delaware,District of Columbia,Georgia,Hawaii,Illinois,Maine,Maryland ,Massachusetts,Michigan,Minnesota,Nevada,New Hampshire,New Jersey,New Mexico,New York,Oregon,Pennsylvania,Rhode Island,Vermont,Virginia,Washington,Wisconsin
+
+Additionally, my analysis is centered on state-level comparisons. To facilitate this, I computed the average values for key variables: health insurance coverage, SNAP Cost Per Household, and SNAP Cost Per Person. Considering the varying population sizes across states, I also calculated the ratio of healthcare insurance coverage to provide a more balanced comparison.
+
+```{r echo=FALSE}
+
+red_states <- c("Alabama", "Alaska", "Arkansas", "Florida", "Idaho", "Indiana", 
+                "Iowa", "Kansas", "Kentucky", "Louisiana", "Mississippi", "Missouri", 
+                "Montana", "Nebraska", "North Carolina", "North Dakota", "Ohio", 
+                "Oklahoma", "South Carolina", "South Dakota", "Tennessee", "Texas", 
+                "Utah", "West Virginia", "Wyoming")
+
+blue_states <- c("Arizona", "California", "Colorado", "Connecticut", "Delaware", 
+                 "District of Columbia", "Georgia", "Hawaii", "Illinois", "Maine", 
+                 "Maryland", "Massachusetts", "Michigan", "Minnesota", "Nevada", 
+                 "New Hampshire", "New Jersey", "New Mexico", "New York", "Oregon", 
+                 "Pennsylvania", "Rhode Island", "Vermont", "Virginia", "Washington", 
+                 "Wisconsin")
+
+
+merged_data_Ella <- merged_data %>%
+  select(State, Year, `Total(Healthcare)`, `With health insurance coverage`, `SNAP Cost Per Household`, `SNAP Cost Per Persons`) %>%
+  mutate(healthcarecover_ratio = `With health insurance coverage` / `Total(Healthcare)`,
+         state_politic = case_when(
+           State %in% red_states ~ "Red",
+           State %in% blue_states ~ "Blue",
+           TRUE ~ "Other" 
+         )) %>%
+  group_by(State, state_politic) %>%
+  summarise(
+    Mean_Healthcare_Cover_Ratio = mean(healthcarecover_ratio, na.rm = TRUE),
+    Mean_SNAP_Cost_Per_Person = mean(`SNAP Cost Per Persons`, na.rm = TRUE),
+    Mean_SNAP_Cost_Per_Household = mean(`SNAP Cost Per Household`, na.rm = TRUE),
+    .groups = "drop" 
+  )
+
+head(merged_data_Ella,5)
+
+```
+
+Firstly, an analysis is conducted to compare the average healthcare coverage ratio with the average SNAP cost per person and the average SNAP cost per household, grouped by whether states are predominantly Red or Blue.
+
+Upon examining the initial plot, it becomes evident that certain outlier values obscure the underlying trends within the data. To obtain a clearer view of the patterns, the dataset will be refined by excluding entries where the average SNAP cost per person exceeds 200, the average SNAP cost per household surpasses 400, and the average healthcare coverage ratio falls below 0.85.\
+
+```{r echo=FALSE}
+
+
+long_data <- merged_data_Ella %>%
+  gather(key = "SNAP_Cost_Index", value = "Value", Mean_SNAP_Cost_Per_Person, Mean_SNAP_Cost_Per_Household)
+
+# Plot the data using ggplot2 with facet_wrap
+ggplot(long_data, aes(x = Mean_Healthcare_Cover_Ratio, y = Value, color = state_politic)) +
+  geom_point() +
+  facet_wrap(~ SNAP_Cost_Index, scales = "free_y") +
+  labs(title = "Comparison of Mean Healthcare Coverage Ratio",
+       x = "Mean Healthcare Coverage Ratio",
+       y = "Value") +
+  scale_color_manual(values = c("Red" = "red", "Blue" = "blue"))
+
+
+```
+
+Once the outliers, specifically Alaska and Hawaii, were excluded, the data pattern became more discernible. For states identified as Blue, a higher healthcare coverage ratio is associated with a decrease in SNAP cost per household, while there is an increase in SNAP cost per person. Conversely, in states identified as Red, an increase in healthcare coverage corresponds with a marginal reduction in both SNAP cost per household and SNAP cost per person.
+
+```{r echo=FALSE}
+long_data_filtered <- long_data %>%
+  filter((SNAP_Cost_Index == "Mean_SNAP_Cost_Per_Person" & Value <= 200) |
+         (SNAP_Cost_Index == "Mean_SNAP_Cost_Per_Household" & Value <= 400))
+
+# Plot the data with specified limits and trend lines
+ggplot(long_data_filtered, aes(x = Mean_Healthcare_Cover_Ratio, y = Value, color = state_politic)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +  # Add linear regression trend lines
+  facet_wrap(~ SNAP_Cost_Index, scales = "free_y") +
+  scale_x_continuous(limits = c(0.85, 1)) +  # Set x-axis limits
+  labs(title = "Comparison of Mean Healthcare Coverage Ratio",
+       x = "Mean Healthcare Coverage Ratio",
+       y = "SNAP Cost") +
+  scale_color_manual(values = c("Red" = "red", "Blue" = "blue"))
+
+
+```
+
+Additionally, to illustrate the political stance of each state and the extent of their health insurance coverage, a map has been created. This map displays the gradation of color intensity for each state, with the shade corresponding to the mean of healthcare cover ratio.
+
+The map indicates that political affiliation, as represented by color, does not seem to be the determining factor for healthcare coverage levels. Geographic characteristics appear to be more influential. For instance, there is a tendency for states at lower altitudes to have lower health insurance coverage rates.
+
+```{r echo=FALSE}
+library(maps)
+
+merged_data_Ella$State <- tolower(merged_data_Ella$State)
+
+states_map <- map_data("state")
+states_map$region <- tolower(states_map$region)
+
+map_data <- left_join(states_map, merged_data_Ella, by = c("region" = "State"))
+
+# Adjust the color intensity based on the Mean_Healthcare_Cover_Ratio
+# Setting a range for the ratio to fall between 0.2 (for lowest coverage) and 1 (for highest coverage)
+map_data <- map_data %>%
+  mutate(
+    intensity = scales::rescale(Mean_Healthcare_Cover_Ratio, to = c(0.2, 1), from = range(Mean_Healthcare_Cover_Ratio, na.rm = TRUE)),
+    color = ifelse(state_politic == "Red", rgb(1, 0, 0, intensity), rgb(0, 0, 1, intensity))
+  )
+
+# Plot the map using ggplot
+ggplot(data = map_data, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = color), color = "white") +
+  scale_fill_identity() +
+  theme_void() +
+  labs(title = "Healthcare Coverage Intensity by State")
+
+
+```
+
+The map illustrating SNAP cost per household, however, reveals a distinct pattern. According to the intensity map, Minnesota and Texas register the highest SNAP costs per household among all the states. Notably, Red states tend to exhibit greater intensity in terms of SNAP cost per household on average.
+
+```{r echo=FALSE}
+library(maps)
+
+merged_data_Ella$State <- tolower(merged_data_Ella$State)
+
+states_map <- map_data("state")
+states_map$region <- tolower(states_map$region)
+
+map_data <- left_join(states_map, merged_data_Ella, by = c("region" = "State"))
+
+# Adjust the color intensity based on the Mean_Healthcare_Cover_Ratio
+# Setting a range for the ratio to fall between 0.2 (for lowest coverage) and 1 (for highest coverage)
+map_data <- map_data %>%
+  mutate(
+    intensity = scales::rescale(Mean_SNAP_Cost_Per_Household, to = c(0.2, 1), from = range(Mean_SNAP_Cost_Per_Household, na.rm = TRUE)),
+    color = ifelse(state_politic == "Red", rgb(1, 0, 0, intensity), rgb(0, 0, 1, intensity))
+  )
+
+# Plot the map using ggplot
+ggplot(data = map_data, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = color), color = "white") +
+  scale_fill_identity() +
+  theme_void() +
+  labs(title = "SNAP cost per household Intensity by State")
+
+
+```
+
+## Julia
+**Research Question**\
+Which racial group participates in the SNAP program the most amongst different states?
+
+
+```{r echo=FALSE}
+##Calculations
+#To find the indices and names of columns in the data set
+printNameIndices <- function(dataSet) {
+  colIndices <- 1:ncol(dataSet)
+  colNames <- names(dataSet)
+  colNamesIndices <- paste(colIndices, colNames, sep = ": ")
+  cat(colNamesIndices, sep = "\n")
+}
+
+#To select the columns I need
+selectedMergeRace <- merged_data %>%
+  select(1, 13:16, 18, 19) %>%
+  na.omit(merged_data)
+
+#Reshape data into long form
+reshapeSNAP <- selectedMergeRace %>%
+  pivot_longer(
+    cols = c(-State),
+    names_to = "Race",
+    values_to = "Snap_Count"
+  )
+
+#Rename values
+reshapeSNAP <- reshapeSNAP %>%
+  mutate(Race = recode(Race,
+      "White_alone" = "White",
+      "Black or African American alone" = "Black or African American",
+      "Alaska Native alone" = "Alaska Native",
+      "American Indian alone" = "Indigenous People",
+      "Asian alone" = "Asian",
+      "Native Hawaiian and Other Pacific Islander alone" = "Native Hawaiian or PI"))
+
+#Ranking races by who uses the SNAP program the most within each state
+rankRaceWithinStates <- reshapeSNAP %>%
+  group_by(State) %>%
+  arrange(desc(Snap_Count), .by_group = TRUE) %>%
+  mutate(rank = row_number()) %>%
+  arrange(rank)
+
+#Grouping Snap_Count by Race
+sumSNAPbyRace <- reshapeSNAP %>%
+  group_by(Race) %>%
+  mutate(SumSNAPcount = sum(Snap_Count)) %>%
+  distinct(SumSNAPcount) %>%
+  arrange(SumSNAPcount)
+```
+
+
+```{r echo=FALSE}
+##Map Plotting
+#Consistency
+rankRaceWithinStates$State <- tolower(rankRaceWithinStates$State)
+
+#Create new data frame of the highest race in each state for mapping
+highestRaceSNAP <- left_join(states_map, rankRaceWithinStates[1:51, ], by = c("region" = "State"))
+
+#Plotting a US map with the race that has the highest SNAP participation
+raceMap <- ggplot(highestRaceSNAP, aes(x = long, y = lat, group = group, fill = factor(Race))) +
+  geom_polygon(color = "black") +
+  theme_void() +
+  labs(title = "Map of Races that have the Highest SNAP Participants",
+       fill = "Race")
+print(raceMap)
+```
+
+```{r}
+#Bar Plotting
+#Plotting a Bar plot to compare the race groups nationally
+raceBar <- ggplot(sumSNAPbyRace) +
+  geom_col(aes(x = Race, y = SumSNAPcount, fill = Race)) +
+  scale_fill_manual(values = c("red", "blue", "green", "orange", "purple","lightblue")) +
+  labs(title = "SNAP Enrollment Across Racial Groups",
+       x = "Race",
+       y = "Number of Snap Participants") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10))
+print(raceBar)
+```
+
