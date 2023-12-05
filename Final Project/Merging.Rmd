@@ -42,11 +42,15 @@ SNAP5Years <- read_delim("../Datasets/SNAP_5years.csv")
 SNAP5Years
 
 
-merged_data <- inner_join(Healthcare5Years, SNAP5Years, SNAP2022Race, by = c("State", "Year"))
+merged_data <- inner_join(Healthcare5Years, SNAP5Years, by = c("State", "Year"))
 merged_data <- inner_join(merged_data, SNAP2022Race, by = c("State", "Year"))
 
 
 merged_data
+
+write.csv(merged_data, "merged_data.csv", row.names = FALSE)
+
+
  
 ```
 
