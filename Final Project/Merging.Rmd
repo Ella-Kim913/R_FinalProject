@@ -262,11 +262,6 @@ sumSNAPbyRace <- reshapeSNAP %>%
   arrange(SumSNAPcount)
 ```
 
-```{r}
-print(sumSNAPbyRace)
-```
-
-
 
 ```{r echo=FALSE}
 ##Map Plotting
@@ -275,7 +270,6 @@ rankRaceWithinStates$State <- tolower(rankRaceWithinStates$State)
 
 #Create new data frame of the highest race in each state for mapping
 highestRaceSNAP <- left_join(states_map, rankRaceWithinStates[1:51, ], by = c("region" = "State"))
-print(highestRaceSNAP)
 
 #Plotting a US map with the race that has the highest SNAP participation
 raceMap <- ggplot(highestRaceSNAP, aes(x = long, y = lat, group = group, fill = factor(Race))) +
@@ -285,7 +279,6 @@ raceMap <- ggplot(highestRaceSNAP, aes(x = long, y = lat, group = group, fill = 
        fill = "Race")
 print(raceMap)
 ```
-
 
 ```{r}
 #Bar Plotting
