@@ -1,10 +1,10 @@
 ---
-title: "Untitled"
+title: "Final Project"
 output: html_document
 date: "2023-11-30"
 ---
 
-Link for each datasets
+Link for each dataset:
 
 1.  Healthcare5Years: This is the link for 2022 setting, got each year data then merged (2022 2021 2019 2018 2017)
 
@@ -259,4 +259,117 @@ raceBar <- ggplot(sumSNAPbyRace) +
        y = "Number of Snap Participants") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10))
 print(raceBar)
+```
+
+## Angelic
+
+**Research Question**
+
+### Do states with the highest SNAP participation also reflect the highest healthcare coverage?
+
+```{r echo=FALSE, include=FALSE}
+head(merged_data)
+```
+
+I am calculating the average individual SNAP participation for each state across all the years (2017-2022, missing 2020). Then, I am ranking the states based on average SNAP participation.
+
+```{r}
+average_snap_participation <- merged_data %>%
+  group_by(State) %>%
+  summarise(Average_SNAP_Participation = mean(`SNAP Persons Participation`, na.rm = TRUE))
+
+head(average_snap_participation)
+
+ranked_states <- average_snap_participation %>%
+  arrange(desc(Average_SNAP_Participation)) %>%
+  mutate(SNAP_Participation_Rank = rank(-Average_SNAP_Participation, na.last = "keep"))
+
+ranked_states
+```
+
+Calculating the percentage of healthcare coverage for each state, and then computing the average healthcare coverage across all the years.
+
+```{r}
+healthcare_coverage <- merged_data %>%
+  mutate(Healthcare_Coverage_Percentage = (`With health insurance coverage` / `Total(Healthcare)` * 100))
+
+average_healthcare_coverage <- healthcare_coverage %>%
+  group_by(State) %>%
+  summarise(Average_Healthcare_Coverage_Percentage = mean(Healthcare_Coverage_Percentage, na.rm = TRUE))
+
+head(average_healthcare_coverage)
+```
+
+Merging the dataset with SNAP Participation rank and the dataset with average healthcare coverage percentage.
+
+```{r}
+merged_SNAP_healthcare <- merge(average_healthcare_coverage, ranked_states, by = "State")
+
+head(merged_SNAP_healthcare)
+```
+
+I filtered out the top 10 ranked states (w.r.t. average SNAP participation) and created a bar graph that compare the rank to healthcare coverage percentage.
+
+```{r}
+top_10_states <- merged_SNAP_healthcare %>%
+  filter(SNAP_Participation_Rank <= 10)
+
+ggplot(top_10_states, aes(x = reorder(State, SNAP_Participation_Rank), y = Average_Healthcare_Coverage_Percentage)) +
+  geom_bar(stat = "identity", fill = "skyblue",  width = 0.6) +
+  geom_text(aes(label = paste0("#", SNAP_Participation_Rank)), vjust = -0.5, size = 3.5) +
+  labs(x = "State", y = "Healthcare Coverage Percentage", title = "Top 10 Ranked States: SNAP Participation vs Healthcare Coverage") +
+  coord_flip()
+```
+
+**The states were ranked by average SNAP participation across 5 years, with California having the highest participation at #1.**
+
+I did the same thing but with the 10 worst ranked states (w.r.t. average SNAP participation).
+
+```{r}
+worst_10_states <- merged_SNAP_healthcare %>%
+  filter(SNAP_Participation_Rank > (nrow(merged_SNAP_healthcare) - 10))
+
+ggplot(worst_10_states, aes(x = reorder(State, SNAP_Participation_Rank), y = Average_Healthcare_Coverage_Percentage)) +
+  geom_bar(stat = "identity", fill = "lightcoral", width = 0.6) +
+  geom_text(aes(label = paste0("#", SNAP_Participation_Rank)), vjust = -0.5, size = 3.5) +
+  labs(x = "State", y = "Healthcare Coverage Percentage", title = "10 Worst Ranked States: SNAP Participation vs Healthcare Coverage") +
+  coord_flip()
+```
+
+**Surprisingly, the 10 states with the lowest average SNAP participation seem to actually have higher overall healthcare coverage when compared to the 10 states with the highest average SNAP participation**
+
+First, I am taking the average of Total(Healthcare) for each state across the years to get an approximate value for the average total population of each state. Then I am creating a scatterplot that visualizes the relationship between SNAP participation and healthcare coverage, with the size of the points corresponding to the average total population of the states.
+
+```{r}
+average_population <- merged_data %>%
+  group_by(State) %>%
+  summarise(Average_Population = mean(`Total(Healthcare)`, na.rm = TRUE))
+
+head(average_population)
+
+merged_SNAP_healthcare <- merge(merged_SNAP_healthcare, average_population, by = "State")
+
+head(merged_SNAP_healthcare)
+```
+
+```{r}
+top_10_states <- merged_SNAP_healthcare %>%
+  filter(SNAP_Participation_Rank <= 10)
+
+ggplot(top_10_states, aes(x = Average_SNAP_Participation, y = Average_Healthcare_Coverage_Percentage, size = Average_Population, color = State)) +
+  geom_point(alpha = 0.6) +
+  scale_size(range = c(3, 15)) +
+  labs(x = "Average SNAP Participation", y = "Average Healthcare Coverage Percentage", size = "Average Population", color = "State") +
+  theme_minimal()
+```
+
+```{r}
+worst_10_states <- merged_SNAP_healthcare %>%
+  filter(SNAP_Participation_Rank > (nrow(merged_SNAP_healthcare) - 10))
+
+ggplot(worst_10_states, aes(x = Average_SNAP_Participation, y = Average_Healthcare_Coverage_Percentage, size = Average_Population, color = State)) +
+  geom_point(alpha = 0.6) +
+  scale_size(range = c(3, 15)) +
+  labs(x = "Average SNAP Participation", y = "Average Healthcare Coverage Percentage", size = "Average Population", color = "State") +
+  theme_minimal()
 ```
