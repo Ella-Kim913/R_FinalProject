@@ -233,6 +233,12 @@ sumSNAPbyRace <- reshapeSNAP %>%
 
 ```{r echo=FALSE}
 ##Map Plotting
+
+library(maps)
+
+states_map <- map_data("state")
+states_map$region <- tolower(states_map$region)
+
 #Consistency
 rankRaceWithinStates$State <- tolower(rankRaceWithinStates$State)
 
