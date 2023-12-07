@@ -4,69 +4,83 @@ output: html_document
 date: "2023-11-30"
 ---
 
-Link for each dataset:
 
-1.  Healthcare5Years: This is the link for 2022 setting, got each year data then merged (2022 2021 2019 2018 2017)
+# Data Documentation
 
+## 1. Link for each datasets
+
+-   Healthcare5Years: This is the link for 2022 setting, got each year data then merged (2022 2021 2019 2018 2017)\
     <https://data.census.gov/mdat/#/search?ds=ACSPUMS1Y2022&vv=PERNP&cv=HICOV&rv=ucgid&wt=PWGTP&g=0400000US01,02,04,05,06,08,09,10,11,12,13,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,44,45,46,47,48,49,50,51,53,54,55,56>
 
-2.  SNAP2022Race:
-
+-   SNAP2022Race\
     <https://data.census.gov/mdat/#/search?ds=ACSPUMS1Y2022&cv=RAC1P,FS&rv=ucgid&wt=WGTP&g=0400000US01,02,04,05,06,08,09,10,11,12,13,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,44,45,46,47,48,49,50,51,53,54,55,56>
 
-3.  SNAP5Years
-
+-   SNAP5Years\
     <https://www.fns.usda.gov/pd/supplemental-nutrition-assistance-program-snap>
 
-4.  Red/Blue states
-
+-   Red/Blue states\
     <https://en.wikipedia.org/wiki/2020_United_States_presidential_election>
 
-**Explanation of Variables**
+## 2. Explanation of all variables
 
-1.  SNAP2022Race: The race is based on the household so there are Mixed or "two or more races"
-    1.  SNAP : Yes ONLY \*There is No data too, if you need I will update
-    2.  Total : Total population
-    3.  White alone
-    4.  Black or African American alone
-    5.  American Indian alone
-    6.  Alaska Native alone
-    7.  American Indian and Alaska Native tribes specified; or American Indian or Alaska Native, not specified and no other races
-    8.  Asian alone
-    9.  Native Hawaiian and Other Pacific Islander alone
+1.  SNAP2022Race: SNAP Participant race categorization in 2022
+    a.  SNAP : Yes/No \*Only included Yes since this analysis is focused on SNAP participats
+    b.  Total : Total participates count
+    c.  White alone
+    d.  Black or African American alone
+    e.  American Indian alone
+    f.  Alaska Native alone
+    g.  American Indian and Alaska Native tribes specified; or American Indian or Alaska Native, not specified and no other races
+    h.  Asian alone
+    i.  Native Hawaiian and Other Pacific Islander alone
+    j.  Some other race alone
+    k.  Two or More Races
 2.  Healthcare5Years : Total healthcare coverage in 2022 2021 2019 2018 2017
-    1.  Total(Healthcare): Total population
-    2.  With health insurance coverage: Population with insurance
-    3.  No health insurance coverage: Population without insurance
+    a.  Total(Healthcare): Total population
+    b.  With health insurance coverage: Population with insurance
+    c.  No health insurance coverage: Population without insurance
 3.  SNAP5Years : SNAP participants in 2023 2022 2021 2020 2019 2018 2017
-    1.  SNAP Household Participation : Total household count participating SNAP
-    2.  SNAP Persons Participation : Total person count participating SNAP
-    3.  SNAP Total Cost : Total amount spend in SNAP
-    4.  SNAP Cost Per Household
-    5.  SNAP Cost Per Persons
+    a.  SNAP Household Participation : Total household count participating SNAP
+    b.  SNAP Persons Participation : Total person count participating SNAP
+    c.  SNAP Total Cost : Total amount spend in SNAP
+    d.  SNAP Cost Per Household
+    e.  SNAP Cost Per Persons
+
+## 3. Basic summary statistics
+
+This merged dataset comprises 306 rows and 21 columns. It contains a total of 255 missing values across all SNAP2022Race variables, due to the exclusive merging of 2022 SNAP Race data. However, as our objective with the Race variable is to examine the most recent year, which is 2022, these missing values do not compromise the analysis. Except for the SNAP2022Race variables, all the columns have a valid data.\
 
 ```{r echo=FALSE}
 library(tidyverse)
 
 SNAP2022Race <- read_delim("../Datasets/SNAP_Race_2022.csv")
 SNAP2022Race <- rename(SNAP2022Race, State = `Selected Geographies`)
-SNAP2022Race
+head(SNAP2022Race,5)
 
 Healthcare5Years <- read_delim("../Datasets/Healthcare_Total.csv")
 Healthcare5Years <- rename(Healthcare5Years, State = `Selected Geographies`)
-Healthcare5Years
+head(Healthcare5Years,5)
 
 SNAP5Years <- read_delim("../Datasets/SNAP_5years.csv")
-SNAP5Years
+head(SNAP5Years,5)
 
 
 merged_data <- inner_join(Healthcare5Years, SNAP5Years, by = c("State", "Year"))
 merged_data <- inner_join(merged_data, SNAP2022Race, by = c("State", "Year"))
 
 
-merged_data
+head(merged_data,5)
+
+dim(merged_data)
+
+missing_or_invalid_values_count <- merged_data %>%
+  summarise_all(~sum(is.na(.) | . == ""))
+
+missing_or_invalid_values_count
  
 ```
+
+3.  
 
 ## Ella
 
@@ -176,7 +190,6 @@ ggplot(long_data, aes(x = state_politic, y = Value, fill = state_politic)) +
   theme_minimal()
 
 ```
-
 
 ## Julia
 
