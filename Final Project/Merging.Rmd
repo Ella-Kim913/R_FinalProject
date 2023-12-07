@@ -4,78 +4,67 @@ output: html_document
 date: "2023-11-30"
 ---
 
-# Data Documentation
+Link for each dataset:
 
-## 1. Link for each datasets
+1.  Healthcare5Years: This is the link for 2022 setting, got each year data then merged (2022 2021 2019 2018 2017)
 
--   Healthcare5Years: This is the link for 2022 setting, got each year data then merged (2022 2021 2019 2018 2017)\
     <https://data.census.gov/mdat/#/search?ds=ACSPUMS1Y2022&vv=PERNP&cv=HICOV&rv=ucgid&wt=PWGTP&g=0400000US01,02,04,05,06,08,09,10,11,12,13,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,44,45,46,47,48,49,50,51,53,54,55,56>
 
--   SNAP2022Race\
+2.  SNAP2022Race:
+
     <https://data.census.gov/mdat/#/search?ds=ACSPUMS1Y2022&cv=RAC1P,FS&rv=ucgid&wt=WGTP&g=0400000US01,02,04,05,06,08,09,10,11,12,13,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,44,45,46,47,48,49,50,51,53,54,55,56>
 
--   SNAP5Years\
+3.  SNAP5Years
+
     <https://www.fns.usda.gov/pd/supplemental-nutrition-assistance-program-snap>
 
--   Red/Blue states\
+4.  Red/Blue states
+
     <https://en.wikipedia.org/wiki/2020_United_States_presidential_election>
 
-## 2. Explanation of all variables
+**Explanation of Variables**
 
-1.  SNAP2022Race: SNAP Participant race categorization in 2022
-    a.  SNAP : Yes/No \*Only included Yes since this analysis is focused on SNAP participats
-    b.  Total : Total participates count
-    c.  White alone
-    d.  Black or African American alone
-    e.  American Indian alone
-    f.  Alaska Native alone
-    g.  American Indian and Alaska Native tribes specified; or American Indian or Alaska Native, not specified and no other races
-    h.  Asian alone
-    i.  Native Hawaiian and Other Pacific Islander alone
-    j.  Some other race alone
-    k.  Two or More Races
+1.  SNAP2022Race: The race is based on the household so there are Mixed or "two or more races"
+    1.  SNAP : Yes ONLY \*There is No data too, if you need I will update
+    2.  Total : Total population
+    3.  White alone
+    4.  Black or African American alone
+    5.  American Indian alone
+    6.  Alaska Native alone
+    7.  American Indian and Alaska Native tribes specified; or American Indian or Alaska Native, not specified and no other races
+    8.  Asian alone
+    9.  Native Hawaiian and Other Pacific Islander alone
 2.  Healthcare5Years : Total healthcare coverage in 2022 2021 2019 2018 2017
-    a.  Total(Healthcare): Total population
-    b.  With health insurance coverage: Population with insurance
-    c.  No health insurance coverage: Population without insurance
+    1.  Total(Healthcare): Total population
+    2.  With health insurance coverage: Population with insurance
+    3.  No health insurance coverage: Population without insurance
 3.  SNAP5Years : SNAP participants in 2023 2022 2021 2020 2019 2018 2017
-    a.  SNAP Household Participation : Total household count participating SNAP
-    b.  SNAP Persons Participation : Total person count participating SNAP
-    c.  SNAP Total Cost : Total amount spend in SNAP
-    d.  SNAP Cost Per Household
-    e.  SNAP Cost Per Persons
-
-## 3. Basic summary statistics
-
-This merged dataset comprises 306 rows and 21 columns. It contains a total of 255 missing values across all SNAP2022Race variables, due to the exclusive merging of 2022 SNAP Race data. However, as our objective with the Race variable is to examine the most recent year, which is 2022, these missing values do not compromise the analysis. Except for the SNAP2022Race variables, all the columns have a valid data.\
+    1.  SNAP Household Participation : Total household count participating SNAP
+    2.  SNAP Persons Participation : Total person count participating SNAP
+    3.  SNAP Total Cost : Total amount spend in SNAP
+    4.  SNAP Cost Per Household
+    5.  SNAP Cost Per Persons
 
 ```{r echo=FALSE}
 library(tidyverse)
 
 SNAP2022Race <- read_delim("../Datasets/SNAP_Race_2022.csv")
 SNAP2022Race <- rename(SNAP2022Race, State = `Selected Geographies`)
-head(SNAP2022Race,5)
+SNAP2022Race
 
 Healthcare5Years <- read_delim("../Datasets/Healthcare_Total.csv")
 Healthcare5Years <- rename(Healthcare5Years, State = `Selected Geographies`)
-head(Healthcare5Years,5)
+Healthcare5Years
 
 SNAP5Years <- read_delim("../Datasets/SNAP_5years.csv")
-head(SNAP5Years,5)
+SNAP5Years
 
 
 merged_data <- inner_join(Healthcare5Years, SNAP5Years, by = c("State", "Year"))
 merged_data <- inner_join(merged_data, SNAP2022Race, by = c("State", "Year"))
 
 
-head(merged_data,5)
-
-dim(merged_data)
-
-missing_or_invalid_values_count <- merged_data %>%
-  summarise_all(~sum(is.na(.) | . == ""))
-
-missing_or_invalid_values_count
+merged_data
  
 ```
 
@@ -389,4 +378,57 @@ ggplot(worst_10_states, aes(x = Average_SNAP_Participation, y = Average_Healthca
   scale_size(range = c(3, 15)) +
   labs(x = "Average SNAP Participation", y = "Average Healthcare Coverage Percentage", size = "Average Population", color = "State") +
   theme_minimal()
+```
+## Sabrin
+** research question
+When was the highest participation of SNAP within the last  years and is there an upward or downward trend in the states?
+```{r}
+# I filtered the data for the highest 20 states. I just wanted to focus on 20 states.
+top_10_states <- merged_data %>%
+  group_by(State) %>%
+  summarize(avg_participation = mean(`SNAP Household Participation`, na.rm = TRUE)) %>%
+  top_n(10, wt = avg_participation) %>%
+  pull(State)
+```
+
+```{r}
+filtered_data <- merged_data %>%
+  filter(State %in% top_10_states)
+# Made in order levels year based on the SNAP participation average.
+filtered_data$Year <- factor(filtered_data$Year, levels = unique(filtered_data$Year[order(-filtered_data$`SNAP Household Participation`)]))
+
+```
+
+```{r}
+# Calculated the SNAP participation average for each state. 
+avg_participation_per_state <- filtered_data %>%
+  group_by(State) %>%
+  summarize(avg_participation = mean(`SNAP Household Participation`, na.rm = TRUE))
+
+```
+
+```{r}
+# I reordered the states based on the SNAP participation average.
+filtered_data$State <- factor(filtered_data$State, levels = avg_participation_per_state$State[order(avg_participation_per_state$avg_participation)])
+# Also I made a color palette with the same order as the levels of Year.
+color_palette <- RColorBrewer::brewer.pal(5, "Set1")[order(levels(filtered_data$Year))]
+```
+
+```{r}
+# Bar for SNAP participation in the highest 10 states
+snap_bar_top_10 <- ggplot(filtered_data, aes(x = State, y = `SNAP Household Participation`, fill = Year)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "SNAP Participation in Top 10 States",
+       x = "State",
+       y = "SNAP Household Participation",
+       fill = "Year") +
+  scale_y_continuous(labels = scales::label_number_si()) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  
+
+print(snap_bar_top_10)
+
+#The year label on the bar side represent the in order of the years how snap went upward and downward for the past five years with it's color. 
+
 ```
