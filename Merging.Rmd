@@ -180,7 +180,7 @@ worst_10_states <- merged_SNAP_healthcare %>%
   filter(Rank_SNAP_Participation > n_distinct(State) - 10) %>%
   arrange(desc(snap_participation_percent))
 ```
-
+BOX PLOT
 ```{r}
 #Graphing the top 10 and worst 10 states based on SNAP participation.
 top_states <- percentage_long %>%
@@ -192,7 +192,7 @@ ggplot(top_states, aes(x = type, y = percentage, fill = type)) +
        x = "State", y = "Percentage") +
   scale_fill_manual(values = c("Healthcare Coverage" = "skyblue", "SNAP Participation" = "lightcoral"))
 ```
-BOX PLOT
+
 ```{r}
 worst_states <- percentage_long %>%
   filter(State %in% worst_10_states$State)
@@ -203,6 +203,25 @@ ggplot(top_states, aes(x = type, y = percentage, fill = type)) +
        x = "State", y = "Percentage") +
   scale_fill_manual(values = c("Healthcare Coverage" = "skyblue", "SNAP Participation" = "lightcoral"))
 ```
+BAR PLOT
+```{r}
+ggplot(top_states, aes(x = State, y = percentage, fill = type)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  labs(title = "Top 10 States: SNAP Participation",
+       x = "State", y = "Percentage") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = c("Healthcare Coverage" = "skyblue", "SNAP Participation" = "lightcoral"))
+```
+
+```{r}
+ggplot(worst_states, aes(x = State, y = percentage, fill = type)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  labs(title = "Worst 10 States: SNAP Participation",
+       x = "State", y = "Percentage") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = c("Healthcare Coverage" = "skyblue", "SNAP Participation" = "lightcoral"))
+```
+
 
 ```{r}
 #Ranking the states based on healthcare coverage percentage.
