@@ -99,6 +99,10 @@ worst_10_states <- merged_SNAP_healthcare %>%
 
 BAR PLOTS
 ```{r}
+#Graphing the top 10 and worst 10 states based on SNAP participation.
+top_states <- percentage_long %>%
+  filter(State %in% top_10_states$State)
+
 ggplot(top_states, aes(x = State, y = percentage, fill = type)) +
   geom_bar(stat = "identity", position = "dodge", width = 0.7) +
   labs(title = "Top 10 States: SNAP Participation",
@@ -108,6 +112,9 @@ ggplot(top_states, aes(x = State, y = percentage, fill = type)) +
 ```
 
 ```{r}
+worst_states <- percentage_long %>%
+  filter(State %in% worst_10_states$State)
+
 ggplot(worst_states, aes(x = State, y = percentage, fill = type)) +
   geom_bar(stat = "identity", position = "dodge", width = 0.7) +
   labs(title = "Worst 10 States: SNAP Participation",
