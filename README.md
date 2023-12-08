@@ -16,6 +16,6 @@ Our analysis unveils a complex relationship between SNAP participation and healt
 (![000010](https://github.com/Ella-Kim913/R_FinalProject/assets/132117916/b0cd9b3b-34c2-4842-bb01-80be5f85063e)
 
 ## Conclusion
-
+Our findings call for more nuanced research and policy interventions, emphasizing the need for equitable access to essential services like healthcare and food assistance. The relationship between healthcare coverage and SNAP participation is indicative of broader socioeconomic and political dynamics that warrant further exploration.
 
 
