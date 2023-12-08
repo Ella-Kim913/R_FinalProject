@@ -12,8 +12,8 @@ In our study, we analyzed state-level data from multiple sources, including the 
 ## Key Findings and Figure
 Our analysis unveils a complex relationship between SNAP participation and healthcare coverage. The findings underscore disparities across states, with an inconsistent correlation between these factors. A notable bar plot from our presentation visually illustrates these state-by-state variations, highlighting the intricate interplay of socioeconomic and political dynamics.
 
-## [Name of the Bar Plot Image]
-![Bar Plot Showing State-wise Variations](![000010](https://github.com/Ella-Kim913/R_FinalProject/assets/132117916/b0cd9b3b-34c2-4842-bb01-80be5f85063e)
+## Average of SNAP participation radio and healthcare coverage radio
+(![000010](https://github.com/Ella-Kim913/R_FinalProject/assets/132117916/b0cd9b3b-34c2-4842-bb01-80be5f85063e)
 
 ## Conclusion
 
