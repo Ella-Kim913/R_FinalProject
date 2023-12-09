@@ -1,4 +1,4 @@
-
+# AA-3 Project
 
 ## Project Overview
 Our project investigates the dynamics of food insecurity and welfare services by exploring the relationship between SNAP participation and healthcare coverage across the United States. Additionally, we hope to find out more about what the demographics of these populations are, how the demand for food assistance (SNAP) has changed over the years, and whether political standing plays a role in access to public assistance programs.
